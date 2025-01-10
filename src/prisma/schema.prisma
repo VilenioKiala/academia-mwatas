@@ -1,0 +1,254 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+model User {
+  id String @id @unique @default(uuid())
+  profilePic String? @db.VarChar(255)
+  nome String @db.VarChar(30)
+  sobrenome String @db.VarChar(30)
+  email String? @unique @db.VarChar(255)
+  moreInfoGave Boolean? @default(false)
+  emailConfirmado Boolean? @default(false)
+  emailVerified DateTime? @map("email_verified")
+  nomeUsuario String @unique @db.VarChar(30)
+  senha String @db.VarChar(255)
+  privilegio String @db.VarChar(50)
+  bloqueado Boolean @default(false)
+  dataNascimento DateTime? @db.Date()
+  genero String?
+  sobre String? @db.Text
+  numeroTelefone Int? @db.UnsignedInt()
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  conviteId String?
+  certificados Certificado[]
+  visualizacoes Visualizacao[]
+  avaliacoes Avaliacao[]
+  comentarios Comentario[]
+  respostasComentario RespostaComentario[]
+  matriculas Matricula[]
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("users")
+   @@fulltext([nome])
+   @@fulltext([nome, sobrenome])
+   @@fulltext([nome, sobrenome, nomeUsuario])
+}
+
+model Curso {
+  id String @id @unique @default(uuid())
+  titulo String @db.VarChar(70)
+  coverCurso String
+  sobreOCurso String? @db.Text
+  fraseDestaque String?
+  preco Int @db.UnsignedInt
+  categoria Categoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  categoriaId String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  modulos Modulo[]
+  matriculas Matricula[]
+  certificados Certificado[]
+  elementosBanner ElementoBanner[]
+
+   @@fulltext([titulo])
+}
+
+model Categoria {
+  id String @id @unique @default(uuid())
+  titulo String @db.VarChar(150)
+  cursos Curso[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Visualizacao {
+  id String @id @unique @default(uuid())
+  videoaula VideoAula @relation(fields: [videoaulaId], references: [id], onDelete: Cascade)
+  videoaulaId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Avaliacao {
+  id String @id @unique @default(uuid())
+  nota Int @db.UnsignedSmallInt()
+  videoAula VideoAula @relation(fields: [videoAulaId], references: [id], onDelete: Cascade)
+  videoAulaId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Certificado {
+  id String @id @unique @default(uuid())
+  imagem String @db.VarChar(255)
+  texto String? @db.VarChar(255)
+  curso Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  cursoId String
+  usuario User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ElementoBanner {
+  id String @id @unique @default(uuid())
+  photo String @db.VarChar(255)
+  curso Curso? @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  cursoId String?
+  link String? @db.VarChar(355)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comentario {
+  id String @id @unique @default(uuid())
+  texto String @db.LongText()
+  respostas RespostaComentario[]
+  usuario User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  videoAula VideoAula @relation(fields: [videoAulaId], references: [id], onDelete: Cascade)
+  videoAulaId String
+  reprovado Boolean @default(false) 
+  lido Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RespostaComentario {
+  id String @id @unique @default(uuid())
+  comentario Comentario @relation(fields: [comentarioId], references: [id], onDelete: Cascade)
+  comentarioId String
+  usuario User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  texto String @db.LongText()
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MaterialComplementar {
+  id String @id @unique @default(uuid())
+  titulo String @db.VarChar(150)
+  ficheiro String @db.VarChar(150)
+  videoaula VideoAula @relation(fields: [videoAulaId], references: [id], onDelete: Cascade)
+  videoAulaId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Modulo {
+  id String @id @unique @default(uuid())
+  titulo String @db.VarChar(150)
+  curso Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  cursoId String
+  videoAulas VideoAula[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VideoAula {
+  id String @id @unique @default(uuid())
+  titulo String @db.VarChar(150)
+  video String @db.VarChar(255)
+  descricao String? @db.LongText
+  duracao Int
+  dataAgendamento DateTime?
+  materiaisComplementares MaterialComplementar[]
+  modulo Modulo @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  moduloId String
+  avaliacoes Avaliacao[]
+  visualizacoes Visualizacao[]
+  comentarios Comentario[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+   
+  @@fulltext([titulo])
+  @@fulltext([titulo, descricao])
+}
+
+model Matricula {
+  id String @id @unique @default(uuid())
+  dataExpiracao DateTime?
+  usuario User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  curso Curso @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  cursoId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Pedido {
+  id String @id @unique @default(uuid())
+  email String
+  convite Convite @relation(fields: [conviteId], references: [id], onDelete: Cascade)
+  conviteId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Convite {
+  id String @id @unique @default(uuid())
+  imagem String @db.VarChar(255)
+  textoDestaque String @db.VarChar(400)
+  textoChamada String @db.VarChar(400)
+  pedidos Pedido[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+ 
+ model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  @@map("sessions")
+}
+ 
+ model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+ 
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
